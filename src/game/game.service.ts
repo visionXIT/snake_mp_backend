@@ -107,16 +107,17 @@ export class GameService {
       }
       socket.in(game.gameId.toString()).emit('gameState', {game});
 
-      if (getPlayersAlive(game).length < 2) {
+      if (getPlayersAlive(game).length < Math.min(game.players.length, 2)) {
         if (getPlayersAlive(game).length == 0) {
           socket.in(game.gameId.toString()).emit('gameOver', {userId: null});
         } else {
           socket.in(game.gameId.toString()).emit('gameOver', {userId: getPlayersAlive(game)[0].userId});
           game.winner = getPlayersAlive(game)[0].userId;
+          game.status = 'waiting';
         }
         clearInterval(id);
       }
-    }, 1000);
+    }, 200);
   }
 
   findGame(gameId: number) {
