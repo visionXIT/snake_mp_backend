@@ -84,6 +84,9 @@ export class GameService {
       throw new Error("Cannot find a game");
     }
     removePlayer(game, userId);
+    if (game.players.length === 0) {
+      this.removeGame(gameId);
+    }
     return game;
   }
 
@@ -127,5 +130,9 @@ export class GameService {
 
   getAllGames() {
     return this.games;
+  }
+
+  removeGame(gameId: number) {
+    this.games = this.games.filter(g => g.gameId !== gameId);
   }
 }

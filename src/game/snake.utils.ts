@@ -79,7 +79,7 @@ export const gameLoop = (game: Game) => {
 
     if (head.x === game.food.x && head.y === game.food.y) {
       snake.body.unshift({...snake.body[0]});
-      changePlayerSpeed(player, game);
+      eatApple(player, game);
       createApple(game);
     }
     
@@ -128,9 +128,10 @@ const checkCollisionsWithSnakes = (players: Snake[], head: Cell) => {
   return false;
 }
 
-const changePlayerSpeed = (player: Player, game: Game) => {
+const eatApple = (player: Player, game: Game) => {
   if (player.speedPhase === game.maxSpeedPhase) {
     return;
   }
   player.speedPhase--;
+  player.score++;
 }

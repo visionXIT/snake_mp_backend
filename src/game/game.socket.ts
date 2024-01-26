@@ -50,6 +50,21 @@ export class GameSocketController {
     }
   }
 
+  @SubscribeMessage('exit_game')
+  async handleExitGame(
+    @MessageBody() message: {gameId: number, userId: number},
+    @ConnectedSocket() client: Socket
+  ) {
+    const {gameId, userId} = message;
+    try {
+      const game = this.service.leaveGame(gameId, userId);
+      client.leave(gameId.toString());
+    } catch (error: unknown) {
+      const msg = (error as {message: string}).message;
+      client.emit('error', {message: msg});
+    }
+  }
+
   @SubscribeMessage('start_game')
   async handleStartGame(
     @MessageBody() message: {gameId: number, userId: number},

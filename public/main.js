@@ -2,7 +2,7 @@ const BG_COLOUR = '#231f20';
 const SNAKE_COLOUR = '#c2c2c2';
 const FOOD_COLOUR = '#f11';
 const FOOD_COLOUR2 = '#ee1';
-const ADDRESS = "http://192.168.62.117";
+const ADDRESS = "http://127.0.0.1";
 const SOCKET_ADDRESS = ADDRESS + ":8000"
 const HTTP_ADDRESS = ADDRESS + ":8000"
 
@@ -33,6 +33,12 @@ const registerFormDiv = document.getElementById('registerForm');
 const welcomeTextDiv = document.getElementById('welcomeText');
 const userName = document.getElementById('userName');
 
+const goBackBtn = document.getElementById('backMainBtn');
+const scoreText = document.getElementById('scoreText');
+const allGamesScreen = document.getElementById('allGamesScreen');
+const reloadBtn = document.getElementById('reloadBtn');
+const gamesScreen = document.getElementById('gamesScreen');
+
 const canvas = document.getElementById('canvas');
 
 const msgBox = document.getElementById('msgBox');
@@ -45,6 +51,7 @@ let ready = false;
 let code;
 let colors = [];
 let roomPlayers = [];
+let games = [];
 let userId, gameId;
 
 document.addEventListener('keydown', keydown);
@@ -52,6 +59,8 @@ newGameBtn.addEventListener('click', newGame);
 joinGameBtn.addEventListener('click', joinGame);
 userButton.addEventListener('click', registerUser);
 startGameBtn.addEventListener('click', startGame)
+goBackBtn.addEventListener('click', goBackToMain);
+reloadBtn.addEventListener('click', reloadGames);
 
 welcomeTextDiv.hidden = true
 initialScreen.hidden = true
@@ -59,6 +68,12 @@ gameScreen.hidden = true
 startGameBtn.hidden = true;
 gameInfo.hidden = true;
 $msgBox.hide()
+
+reloadGames();
+
+function reloadGames() {
+  getAllGames();
+}
 
 function startGame() {
   socket.emit('start_game', {gameId, userId});
@@ -116,6 +131,8 @@ function handlePlayerJoined(game) {
   if (game.gameSettings.ownerId === userId) {
     startGameBtn.hidden = false;
   }
+  gameId = game.gameId;
+  scoreText.innerText = 0;
 }
 
 function handlePlayerLost(msg) {
@@ -133,6 +150,7 @@ function handleGameStarted() {
 
 function handleGameState(msg) {
   const game = msg.game;
+  scoreText.innerText = msg.game.players.find(p => p.userId === userId).score;
   requestAnimationFrame(() => paintGame(game));
 }
 
@@ -175,11 +193,21 @@ async function registerUser() {
   }
   let id = await res.json();
   userId = id;
-  console.log(userId);
   registerFormDiv.hidden = true;
   welcomeTextDiv.hidden = false;
   userName.textContent = name;  
   initialScreen.hidden = false;
+  await getAllGames();
+}
+
+function goBackToMain() {
+  initialScreen.hidden = false;
+  gameScreen.hidden = true;
+  gameInfo.hidden = true;
+  allGamesScreen.hidden = false;
+  socket.emit('exit_game', {gameId, userId});
+  gameId = null;
+  getAllGames();
 }
 
 async function newGame() {
@@ -223,7 +251,7 @@ function joinGame() {
     showError("You must input the name and the code")
     return;
   }
-  console.log(gameId);
+  
   socket.emit('join_game', {gameId, userId});
   init();
   gameCodeDisplay.textContent = gameId;
@@ -231,11 +259,47 @@ function joinGame() {
   gameScreen.hidden = false;
 } 
 
+async function getAllGames() {
+  const res = await fetch(
+    HTTP_ADDRESS + '/game/get_all_games',
+  );
+  const body = await res.json();
+  console.log(body);
+
+  if (!res.ok) {
+    if (res.status < 500) {
+      showError(err.message);
+    } else {
+      showError("Server error");
+      console.log(err.message);
+    }
+    return;
+  }
+  games = body;
+  drawGames(body);
+}
+
+function drawGames(games) {
+  gamesScreen.replaceChildren([]);
+  if (!games || games.length === 0) {
+    gamesScreen.innerText = 'No games available now';
+  }
+  for (let game of games) {
+    let node = document.createElement('div');
+    node.classList = 'p-3 rounded-5 border border-primary mb-2 bg-primary-subtle';
+    let name = game.players.find(p => p.userId === game.gameSettings.ownerId).name;
+    node.innerText = `Owner: ${name}. Code: ${game.gameId}. Players now: ${game.players.map(p => p.name).join(',')}`;
+    gamesScreen.appendChild(node);
+  }
+}
+
+
 function init() {
   gameCodeDisplay.textContent = gameId;
   initialScreen.hidden = true;
   gameScreen.hidden = false;
   gameInfo.hidden = false;
+  allGamesScreen.hidden = true;
   ctx = canvas.getContext('2d');
 
   canvas.width = canvas.height = 600;
@@ -301,8 +365,10 @@ function paintPlayer(player, size) {
   const color = player.color;
   const colorRgb = `rgb(${Math.floor(color[0] * 255)}, ${Math.floor(color[1] * 255)}, ${Math.floor(color[2] * 255)})`;
   ctx.fillStyle = colorRgb;
+  ctx.strokeStyle = 'gray';
   for (let cell of snake.body.slice(0, -1)) {
     ctx.fillRect(Math.ceil(cell.x) * size, Math.ceil(cell.y) * size, size, size);
+    ctx.strokeRect(Math.ceil(cell.x) * size, Math.ceil(cell.y) * size, size, size);
   }
   ctx.fillStyle = "#def";
   ctx.fillRect(Math.ceil(snake.body.at(-1).x) * size, Math.ceil(snake.body.at(-1).y) * size, size, size);
