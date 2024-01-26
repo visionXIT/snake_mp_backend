@@ -26,7 +26,9 @@ export const createPlayer = (userId: number, name: string) => {
     snake: null,
     alive: true,
     name,
-    started: false
+    started: false,
+    speedPhase: 8,
+    phase: 0
   };
   return player;
 }
@@ -35,33 +37,34 @@ export const initPlayer = (player: Player, game: Game) => {
   const dir = getRandomNumber(0, 4);
   let cells: Cell[] = [];
   let velx = 0, vely = 0;
+  let velm = 1;
   switch (dir) {
     case 0:
       do {
         const {x, y} = getRandomCoords(game);
         cells = [{x, y}, {x, y: y + 1}, {x, y: y + 2}];
-        vely = 1;
+        vely = velm;
       } while (!areCoordsFree(cells, game));
       break;
     case 1:
       do {
         const {x, y} = getRandomCoords(game);
         cells = [{x, y}, {x, y: y - 1}, {x, y: y - 2}];
-        vely = -1;
+        vely = -velm;
       } while (!areCoordsFree(cells, game));
       break;
     case 2:
       do {
         const {x, y} = getRandomCoords(game);
         cells = [{x, y}, {x: x + 1, y}, {x: x + 2, y}];
-        velx = 1;
+        velx = velm;
       } while (!areCoordsFree(cells, game));
       break;
     case 3:
       do {
         const {x, y} = getRandomCoords(game);
         cells = [{x, y}, {x: x - 1, y}, {x: x - 2, y}];
-        velx = -1;
+        velx = -velm;
       } while (!areCoordsFree(cells, game));
       break;
   }

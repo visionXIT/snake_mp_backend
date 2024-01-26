@@ -23,7 +23,8 @@ export class GameService {
       winner: null,
       gameId,
       status: 'waiting',
-      food: null
+      food: null,
+      maxSpeedPhase: 3
     }
     this.games.push(game);
     return gameId;
@@ -117,7 +118,7 @@ export class GameService {
         }
         clearInterval(id);
       }
-    }, 200);
+    }, 25);
   }
 
   findGame(gameId: number) {

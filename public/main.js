@@ -2,7 +2,7 @@ const BG_COLOUR = '#231f20';
 const SNAKE_COLOUR = '#c2c2c2';
 const FOOD_COLOUR = '#f11';
 const FOOD_COLOUR2 = '#ee1';
-const ADDRESS = "http://127.0.0.1";
+const ADDRESS = "http://192.168.62.117";
 const SOCKET_ADDRESS = ADDRESS + ":8000"
 const HTTP_ADDRESS = ADDRESS + ":8000"
 
@@ -46,6 +46,7 @@ let code;
 let colors = [];
 let roomPlayers = [];
 let userId, gameId;
+
 document.addEventListener('keydown', keydown);
 newGameBtn.addEventListener('click', newGame);
 joinGameBtn.addEventListener('click', joinGame);
@@ -174,6 +175,7 @@ async function registerUser() {
   }
   let id = await res.json();
   userId = id;
+  console.log(userId);
   registerFormDiv.hidden = true;
   welcomeTextDiv.hidden = false;
   userName.textContent = name;  
@@ -300,9 +302,9 @@ function paintPlayer(player, size) {
   const colorRgb = `rgb(${Math.floor(color[0] * 255)}, ${Math.floor(color[1] * 255)}, ${Math.floor(color[2] * 255)})`;
   ctx.fillStyle = colorRgb;
   for (let cell of snake.body.slice(0, -1)) {
-    ctx.fillRect(cell.x * size, cell.y * size, size, size);
+    ctx.fillRect(Math.ceil(cell.x) * size, Math.ceil(cell.y) * size, size, size);
   }
   ctx.fillStyle = "#def";
-  ctx.fillRect(snake.head.x * size, snake.head.y * size, size, size);
+  ctx.fillRect(Math.ceil(snake.body.at(-1).x) * size, Math.ceil(snake.body.at(-1).y) * size, size, size);
 }
 

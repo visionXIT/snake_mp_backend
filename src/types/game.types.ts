@@ -19,6 +19,7 @@ export type Game = {
   status: GameStatus;
   food: Food;
   timeGameStarted?: number;
+  maxSpeedPhase: number;
 }
 
 export type GameStatus = 'in_process' | 'waiting' | 'ended';
@@ -31,6 +32,8 @@ export type Player = {
   score: number;
   isReady: boolean;
   alive: boolean;
+  speedPhase: number;
+  phase: number;
   started: boolean;
 }
 

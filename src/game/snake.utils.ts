@@ -2,33 +2,35 @@ import { Cell, Game, Move, Player, Snake } from 'src/types/game.types';
 import { getFreeCoord } from './game.utils';
 
 export const makeMove = (player: Player, move: Move) => {
+  let velm = 1;
+
   switch (move as Move) {
     case Move.LEFT:
       if (player.snake.velx > 0) {
         break;
       }
-      player.snake.velx = -1;
+      player.snake.velx = -velm;
       player.snake.vely = 0;
       break
     case Move.RIGHT:
       if (player.snake.velx < 0) {
         break;
       }
-      player.snake.velx = 1;
+      player.snake.velx = velm;
       player.snake.vely = 0;
       break
     case Move.UP:
       if (player.snake.vely > 0) {
         break;
       }
-      player.snake.vely = -1;
+      player.snake.vely = -velm;
       player.snake.velx = 0;
       break
     case Move.DOWN:
       if (player.snake.vely < 0) {
         break;
       }
-      player.snake.vely = 1;
+      player.snake.vely = velm;
       player.snake.velx = 0;
       break
     default:
@@ -58,19 +60,26 @@ export const gameLoop = (game: Game) => {
         continue;
       }
     }
+    player.phase++;
+    if (player.phase < player.speedPhase) {
+      continue;
+    }
+    player.phase = 0;
 
     const snake = player.snake;
-    snake.head.x += snake.velx;
-    snake.head.y += snake.vely;
+    const head = snake.head;
+    head.x += snake.velx;
+    head.y += snake.vely;
     
-    if (snake.head.x < 0 || snake.head.x > game.fieldSettings.fieldW ||
-        snake.head.y < 0 || snake.head.y > game.fieldSettings.fieldH) {
+    if (head.x < 0 || head.x > game.fieldSettings.fieldW ||
+        head.y < 0 || head.y > game.fieldSettings.fieldH) {
           loosers.push(player);
           continue
     }
 
-    if (snake.head.x === game.food.x && snake.head.y === game.food.y) {
-      snake.body.push({...snake.body.at(-1)});
+    if (head.x === game.food.x && head.y === game.food.y) {
+      snake.body.unshift({...snake.body[0]});
+      changePlayerSpeed(player, game);
       createApple(game);
     }
     
@@ -84,13 +93,14 @@ export const gameLoop = (game: Game) => {
       game.players
             .filter(p => p.userId !== player.userId)
             .map(p => p.snake), 
-      snake.head)) {
+      head)) {
         loosers.push(player);
         continue;
     }
 
     snake.body.shift();
-    snake.body.push({...snake.head});
+    snake.body.push({x: snake.body.at(-1).x + snake.velx, y: snake.body.at(-1).y + snake.vely});
+    snake.head = {...snake.body.at(-1)};
   }
   for (let player of loosers) {
     player.alive = false
@@ -100,7 +110,7 @@ export const gameLoop = (game: Game) => {
 
 const checkSelfCollisions = (player: Snake) => {
   for (let c of player.body.slice(0, -2)) {
-    if (c.x === player.head.x && c.y === player.head.y) {
+    if (c.x === player.head.x && c.y ===player.head.y) {
       return true;
     }
   }
@@ -116,4 +126,11 @@ const checkCollisionsWithSnakes = (players: Snake[], head: Cell) => {
     }
   }
   return false;
+}
+
+const changePlayerSpeed = (player: Player, game: Game) => {
+  if (player.speedPhase === game.maxSpeedPhase) {
+    return;
+  }
+  player.speedPhase--;
 }
