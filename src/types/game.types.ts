@@ -8,6 +8,11 @@ export type GameSettingsType = {
   maxPlayers: number;
   ownerId: number;
   delayTime: number;
+  endPlay: boolean;
+  maxSpeedPhase: number;
+  increasingVelPerScores: number;
+  startSpeedPhaze: number;
+  numApples: number;
 }
 
 export type Game = {
@@ -17,12 +22,11 @@ export type Game = {
   players: Player[];
   winner: number;
   status: GameStatus;
-  food: Food;
+  foods: Food[];
   timeGameStarted?: number;
-  maxSpeedPhase: number;
 }
 
-export type GameStatus = 'in_process' | 'waiting' | 'ended';
+export type GameStatus = 'in_process' | 'waiting';
 
 export type Player = {
   userId: number;

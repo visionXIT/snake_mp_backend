@@ -81,7 +81,7 @@
             </div>
           </div>
           <div
-            class='container text-center rounded-5 gray-500 p-3'
+            class='container text-center rounded-5 gray-500 p-2'
             id='gameInfo'
           >
             <button class="btn btn-info" id="backMainBtn">
@@ -89,14 +89,15 @@
             </button>
             <h1>Your game code is: <span id='gameCodeDisplay'></span></h1>
             <h2>People in game:</h2>
-            <div id='playersList' class='m1-1'></div>
+            <div id='playersList' class='m1-1' style="overflow-y: scroll; max-height: 200px"></div>
             <button
-              type='submit'
-              class='btn btn-success mt-1'
+              type='submit' 
+              class='btn btn-success mt-1 mb-3'
               id='startGameBtn'
             >
               Start Game
             </button>
+            <div class="m1-1 bg-success-subtle rounded-5 p-3" id="lastWinnerDiv">Last winner: <span id="lastWinnerText"></span></div>
           </div>
         </div>
         <div class='col-8'>

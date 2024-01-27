@@ -1,4 +1,4 @@
-import { Cell, Game, Move, Player, Snake } from 'src/types/game.types';
+import { Cell, Food, Game, Move, Player, Snake } from 'src/types/game.types';
 import { getFreeCoord } from './game.utils';
 
 export const makeMove = (player: Player, move: Move) => {
@@ -40,10 +40,17 @@ export const makeMove = (player: Player, move: Move) => {
 
 export const createApple = (game: Game) => {
   const {x, y} = getFreeCoord(game);
-  game.food = {
-    x, y, 
-    adds:1
+  if (!game.foods) {
+    game.foods = [];
   }
+  game.foods.push({
+    x, y, 
+    adds: 1
+  });
+}
+
+export const removeApple = (food: Food, game: Game) => {
+  game.foods = game.foods.filter(f => f.x !== food.x && f.y !== food.y);
 }
 
 export const gameLoop = (game: Game) => {
@@ -76,19 +83,24 @@ export const gameLoop = (game: Game) => {
           loosers.push(player);
           continue
     }
-
-    if (head.x === game.food.x && head.y === game.food.y) {
-      snake.body.unshift({...snake.body[0]});
-      eatApple(player, game);
-      createApple(game);
+    let fs = [...game.foods];
+    for (let food of fs) {
+      if (head.x === food.x && head.y === food.y) {
+        for (let i = 0; i < food.adds; i++) {
+          snake.body.unshift({...snake.body[0]});
+        }
+        eatApple(player, game, food);
+        removeApple(food, game);
+        createApple(game);
+      }
     }
+    
     
     if (checkSelfCollisions(snake)) {
       loosers.push(player);
       continue;
     }
 
-    
     if (checkCollisionsWithSnakes(
       game.players
             .filter(p => p.userId !== player.userId)
@@ -128,10 +140,14 @@ const checkCollisionsWithSnakes = (players: Snake[], head: Cell) => {
   return false;
 }
 
-const eatApple = (player: Player, game: Game) => {
-  if (player.speedPhase === game.maxSpeedPhase) {
+const eatApple = (player: Player, game: Game, food: Food) => {
+  let dif = player.score % game.gameSettings.increasingVelPerScores;
+  player.score += food.adds;
+
+  if (player.speedPhase === game.gameSettings.maxSpeedPhase) {
     return;
   }
-  player.speedPhase--;
-  player.score++;
+  if ((dif + food.adds >= game.gameSettings.increasingVelPerScores) || player.score % game.gameSettings.increasingVelPerScores === 0) {
+    player.speedPhase--;
+  }
 }

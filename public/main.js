@@ -38,6 +38,9 @@ const scoreText = document.getElementById('scoreText');
 const allGamesScreen = document.getElementById('allGamesScreen');
 const reloadBtn = document.getElementById('reloadBtn');
 const gamesScreen = document.getElementById('gamesScreen');
+const lastWinnerDiv = document.getElementById('lastWinnerDiv');
+const lastWinnerText = document.getElementById('lastWinnerText');
+
 
 const logoutBtn = document.getElementById('logoutBtn');
 
@@ -49,7 +52,7 @@ const $msgBox = $('#msgBox');
 const STATE_REG = 2, STATE_HOME = 0, STATE_GAME = 1;
 let state = STATE_REG;
 
-let ctx;
+let ctx = canvas.getContext('2d');
 let playerNumber;
 let gameActive = false;
 let ready = false;
@@ -73,11 +76,14 @@ initialScreen.hidden = true
 gameScreen.hidden = true
 startGameBtn.hidden = true;
 gameInfo.hidden = true;
+// lastWinnerText.hidden = true;
 $msgBox.hide()
 
-reloadGames();
-loadAuth();
+reloadGames()
+setInterval(() => reloadGames(), 500000);
+// loadAuth();
 conductStates();
+
 
 function setAuth() {
   if (!userId) {
@@ -87,10 +93,23 @@ function setAuth() {
   localStorage.setItem('auth', userId);
 }
 
-function loadAuth() {
+async function loadAuth() {
   let ui = localStorage.getItem('auth');
   if (ui) {
-    userId = ui;
+    const res = await fetch(HTTP_ADDRESS + '/auth/get_user/' + ui);
+    const body = await res.json();
+    if (!res.ok) {
+      if (res.status === 404) {
+        removeAuth();
+        return;
+      }
+      handleHttpErrors(res, body);
+      return;
+    }
+    userName.textContent = body.name;  
+    userId = +ui;
+    state = STATE_HOME;
+    conductStates();
   }
 }
 
@@ -115,12 +134,7 @@ async function logout() {
   );
   if (!res.ok) {
     const err = await res.json();
-    if (res.status < 500) {
-      showError(err.message);
-    } else {
-      showError("Server error");
-      console.log(err.message);
-    }
+    handleHttpErrors(res, err);
     return;
   }
   userId = null;
@@ -131,6 +145,12 @@ async function logout() {
 
 function reloadGames() {
   getAllGames();  
+}
+
+function quitAll() {
+  if (gameId && userId) {
+    socket.emit('exit_game', {gameId, userId});
+  }
 }
 
 function startGame() {
@@ -170,6 +190,7 @@ function drawPlayerNode(p) {
   const color = p.color;
   let node = document.createElement('div');
   node.classList = 'row border border-primary-subtle rounded-3 p-1 mb-2';
+  node.style.width = '100%';  
   let snake = document.createElement('div');
   snake.classList = 'col-3 border-end'
   snake.style.backgroundColor = 'rgb(' + Math.floor(color[0] * 255) + ", " + Math.floor(color[1] * 255) + ", " + Math.floor(color[2] * 255) + ")"
@@ -213,18 +234,27 @@ function handleGameState(msg) {
 }
 
 function handleGameOver(msg) {
-  if (!msg.userId) {
-    showInfo("No winners");
-    return;
+  init();
+  gameActive = false;
+  if (!msg.player?.userId) {
+    lastWinnerText.innerText = '------';  
+    showInfo("Game Over");
   }
-  if (msg.userId === userId) {
-    showInfo("You win")
-    gameActive = false;
+  else {
+    if (msg.player?.userId === userId) {
+      showInfo("You win")
+    } else {
+      showInfo(msg.player?.name + ' win');
+    }
+    lastWinnerText.innerText = msg.player.name;  
+  }
+  if (msg.game.gameSettings.ownerId === userId) {
+    startGameBtn.hidden = false;
   }
 }
 
 async function registerUser() {
-  const name = userNameInput.value;
+  const name = userNameInput.value.trim();
   if (!name || name.length < 1 || name.length > 15) {
     showError("Name is not valid");
     return;
@@ -241,12 +271,7 @@ async function registerUser() {
   );
   if (!res.ok) {
     const err = await res.json();
-    if (res.status < 500) {
-      showError(err.message);
-    } else {
-      showError("Server error");
-      console.log(err.message);
-    }
+    handleHttpErrors(res, err);
     return;
   }
   let id = await res.json();
@@ -257,13 +282,15 @@ async function registerUser() {
   conductStates();
 
   setAuth();
-  await getAllGames();
+  getAllGames();
 }
 
 function goBackToMain() {
   state = STATE_HOME;
   conductStates();
-  socket.emit('exit_game', {gameId, userId});
+  if (gameId && userId) {
+    socket.emit('exit_game', {gameId, userId});
+  }
   gameId = null;
   getAllGames();
 }
@@ -283,19 +310,18 @@ async function newGame() {
         'minPlayers': 1,
         'maxPlayers': 5,
         'ownerId': userId,
-        "delayTime": 4000
+        "delayTime": 4000,
+        "endPlay": true,
+        "maxSpeedPhase": 8,
+        "startSpeedPhaze": 20,
+        "increasingVelPerScores": 3,
+        "numApples": 3
       }
     })
   })
   const body = await res.json();
   if (!res.ok) {
-    const err = body;
-    if (res.status < 500) {
-      showError(err.message);
-    } else {
-      showError("Server error");
-      console.log(err.message);
-    }
+    handleHttpErrors(res, body);
     return;
   }
   gameId = body;
@@ -303,10 +329,22 @@ async function newGame() {
   init();
 }
 
-function joinGame() {
+async function joinGame() {
   const gameId = +gameCodeInput.value;
+  gameCodeInput.value = '';
   if (gameId === '') {
     showError("You must input the name and the code")
+    return;
+  }
+
+  const res = await fetch(HTTP_ADDRESS + '/game/check_gameId/' + gameId);
+  const body = await res.json();
+  if (!res.ok) {
+    handleHttpErrors(res, body);
+    return;
+  }
+  if (!body) {
+    showError("Incorrect game code");
     return;
   }
   
@@ -322,15 +360,9 @@ async function getAllGames() {
     HTTP_ADDRESS + '/game/get_all_games',
   );
   const body = await res.json();
-  console.log(body);
 
   if (!res.ok) {
-    if (res.status < 500) {
-      showError(err.message);
-    } else {
-      showError("Server error");
-      console.log(err.message);
-    }
+    handleHttpErrors(res, body);
     return;
   }
   games = body;
@@ -346,24 +378,44 @@ function drawGames(games) {
     let node = document.createElement('div');
     node.classList = 'p-3 rounded-5 border border-primary mb-2 bg-primary-subtle';
     let name = game.players.find(p => p.userId === game.gameSettings.ownerId)?.name;
+    node.style.overflowX = 'scroll';
+    node.style.width = '100%';  
     node.innerText = `Owner: ${name}. Code: ${game.gameId}. Players now: ${game.players.map(p => p.name).join(',')}`;
+    if (game.gameSettings.ownerId === userId) {
+      node.style.position = 'relative';
+      let cancel = document.createElement('i');
+      cancel.addEventListener('click', deleteGame)
+      cancel.classList = 'bi bi-x-lg';
+      cancel.style.position = 'absolute';
+      cancel.style.right = '20px';
+      cancel.style.top = '35%'
+      node.appendChild(cancel);
+    }
     gamesScreen.appendChild(node);
   }
 }
 
+async function deleteGame(e) {
+  console.log(e);
+  // const res = await fetch(HTTP_ADDRESS + '/game/delete_game', {
+  //   method: 'POST',
+  //   'headers': {
+  //     'Content-Type': 'application/json;charset=utf-8'
+  //   },
+  //   "body": JSON.stringify({userId, e})
+  // });
+}
 
 function init() {
   gameCodeDisplay.textContent = gameId;
 
   state = STATE_GAME;
   conductStates();
-  
-  ctx = canvas.getContext('2d');
-
   canvas.width = canvas.height = 600;
 
   ctx.fillStyle = BG_COLOUR;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  console.log("Init");
 }
 
 function keydown(e) {
@@ -395,7 +447,6 @@ function keydown(e) {
 function paintGame(game) {
   ctx.fillStyle = BG_COLOUR;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  const food = game.food;
   const gridsize = game.fieldSettings.fieldW;
   const size = canvas.width / gridsize;
   ctx.strokeStyle = 'green';
@@ -404,13 +455,13 @@ function paintGame(game) {
       ctx.strokeRect(i * size, j * size, size, size);
     }
   }
-  
-  if (food.adds != 1)
-    ctx.fillStyle = FOOD_COLOUR2;
-  else
-    ctx.fillStyle = FOOD_COLOUR;
-  ctx.fillRect(food.x * size, food.y * size, size, size);
-  
+  for (let food of game.foods) {
+    if (food.adds != 1)
+      ctx.fillStyle = FOOD_COLOUR2;
+    else
+      ctx.fillStyle = FOOD_COLOUR;
+    ctx.fillRect(food.x * size, food.y * size, size, size);
+  }
 
   for (let player of game.players) {
     if (!player.alive) continue;
@@ -426,11 +477,27 @@ function paintPlayer(player, size) {
   ctx.strokeStyle = 'gray';
   for (let cell of snake.body.slice(0, -1)) {
     ctx.fillRect(Math.ceil(cell.x) * size, Math.ceil(cell.y) * size, size, size);
-    ctx.strokeRect(Math.ceil(cell.x) * size, Math.ceil(cell.y) * size, size, size);
+    if (player.started) {
+      ctx.strokeRect(Math.ceil(cell.x) * size, Math.ceil(cell.y) * size, size, size);
+    } else {
+      ctx.strokeStyle = 'gold'
+      ctx.lineWidth = 3;
+      ctx.strokeRect(Math.ceil(cell.x) * size, Math.ceil(cell.y) * size, size, size);
+    }
   }
   ctx.fillStyle = "#def";
   ctx.fillRect(Math.ceil(snake.body.at(-1).x) * size, Math.ceil(snake.body.at(-1).y) * size, size, size);
 }
+
+function handleHttpErrors(res, err) {
+  if (res.status < 500) {
+    showError(err.message);
+  } else {
+    showError("Server error");
+    console.log(err.message);
+  }
+}
+
 
 function conductStates() {
   switch (state) {

@@ -25,14 +25,15 @@ export const getUsedCoords = (game: Game) => {
   return cells;
 }
 
-export const getRandomCoords = (game: Game) => {
-  const x = getRandomNumber(3, game.fieldSettings.fieldW - 3),
-        y = getRandomNumber(3, game.fieldSettings.fieldW - 3)
+export const getRandomCoords = (game: Game, min = 3, max = 3) => {
+  const x = getRandomNumber(min, game.fieldSettings.fieldW - max),
+        y = getRandomNumber(min, game.fieldSettings.fieldH - max)
   return {x, y};
 }
 
 export const areCoordsFree = (arr: Cell[], game: Game) => {
   const cells = getUsedCoords(game);
+  // console.log(cells, arr);
   for (let c of arr) {
     const f = cells.find(cell => cell.x === c.x && cell.y === c.y);
     if (f) {
@@ -46,6 +47,8 @@ export const getFreeCoord = (game: Game) => {
   let coords: Cell;
   do {
     coords = getRandomCoords(game);
+    // console.log("===", coords);
   } while (!areCoordsFree([coords], game)); 
+  // console.log("Final", coords);
   return coords;
 }

@@ -2,6 +2,7 @@ import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect,
 import { GameService } from "./game.service";
 import { Socket, Server } from "socket.io";
 import { Move } from "src/types/game.types";
+import { ParseIntPipe, ValidationPipe } from "@nestjs/common";
 
 @WebSocketGateway({
   cors: {

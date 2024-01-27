@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { generateId } from "src/game/game.utils";
 import { User } from "src/types/user.types";
 
@@ -20,7 +20,12 @@ export class AuthService {
   }
 
   findById(id: number) {
-    return users.find(user => user.id === id);
+    console.log(id);
+    const user = users.find(user => user.id === id);
+    if (!user) {
+      throw new NotFoundException("User is not found");
+    }
+    return user;
   }
 
   findByName(name: string) {
