@@ -15,23 +15,23 @@ async function bootstrap() {
     },
   );
 
-  const appFrontend = await NestFactory.create<NestExpressApplication>(
-    FrontendModule,
-    {
-      cors: {
-        origin: '*',
-      },
-    },
-  );
+  // const appFrontend = await NestFactory.create<NestExpressApplication>(
+  //   FrontendModule,
+  //   {
+  //     cors: {
+  //       origin: '*',
+  //     },
+  //   },
+  // );
 
-  appFrontend.setBaseViewsDir(join(__dirname, '..', 'views'));
-  appFrontend.useStaticAssets(join(__dirname, '..', 'public'));
-  appFrontend.setViewEngine('hbs');
+  // appFrontend.setBaseViewsDir(join(__dirname, '..', 'views'));
+  // appFrontend.useStaticAssets(join(__dirname, '..', 'public'));
+  // appFrontend.setViewEngine('hbs');
   appBackend.useGlobalPipes(new ValidationPipe());
 
-  await appFrontend.listen(process.env.FRONTEND_PORT, () =>
-    console.log(`Frontend started on ${process.env.FRONTEND_PORT}`),
-  );
+  // await appFrontend.listen(process.env.FRONTEND_PORT, () =>
+  //   console.log(`Frontend started on ${process.env.FRONTEND_PORT}`),
+  // );
   await appBackend.listen(process.env.SERVER_PORT, () =>
     console.log(`Server started on ${process.env.SERVER_PORT}`),
   );
