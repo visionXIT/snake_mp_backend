@@ -315,7 +315,7 @@ async function newGame() {
         "maxSpeedPhase": 8,
         "startSpeedPhaze": 20,
         "increasingVelPerScores": 3,
-        "numApples": 3
+        "numApples": 1
       }
     })
   })
@@ -478,6 +478,7 @@ function paintPlayer(player, size) {
   for (let cell of snake.body.slice(0, -1)) {
     ctx.fillRect(Math.ceil(cell.x) * size, Math.ceil(cell.y) * size, size, size);
     if (player.started) {
+      ctx.lineWidth = 1;
       ctx.strokeRect(Math.ceil(cell.x) * size, Math.ceil(cell.y) * size, size, size);
     } else {
       ctx.strokeStyle = 'gold'
@@ -485,6 +486,7 @@ function paintPlayer(player, size) {
       ctx.strokeRect(Math.ceil(cell.x) * size, Math.ceil(cell.y) * size, size, size);
     }
   }
+  ctx.lineWidth = 1;
   ctx.fillStyle = "#def";
   ctx.fillRect(Math.ceil(snake.body.at(-1).x) * size, Math.ceil(snake.body.at(-1).y) * size, size, size);
 }
