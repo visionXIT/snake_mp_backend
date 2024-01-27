@@ -12,4 +12,10 @@ export class AuthController {
     const {name} = msg;
     return this.service.createUser(name);
   }
+
+  @Post('/logout')
+  logout(@Body() msg) {
+    const { userId } = msg;
+    return this.service.logout(userId);
+  }
 }

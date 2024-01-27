@@ -39,10 +39,15 @@ const allGamesScreen = document.getElementById('allGamesScreen');
 const reloadBtn = document.getElementById('reloadBtn');
 const gamesScreen = document.getElementById('gamesScreen');
 
+const logoutBtn = document.getElementById('logoutBtn');
+
 const canvas = document.getElementById('canvas');
 
 const msgBox = document.getElementById('msgBox');
 const $msgBox = $('#msgBox');
+
+const STATE_REG = 2, STATE_HOME = 0, STATE_GAME = 1;
+let state = STATE_REG;
 
 let ctx;
 let playerNumber;
@@ -60,6 +65,7 @@ joinGameBtn.addEventListener('click', joinGame);
 userButton.addEventListener('click', registerUser);
 startGameBtn.addEventListener('click', startGame)
 goBackBtn.addEventListener('click', goBackToMain);
+logoutBtn.addEventListener('click', logout);
 reloadBtn.addEventListener('click', reloadGames);
 
 welcomeTextDiv.hidden = true
@@ -70,9 +76,61 @@ gameInfo.hidden = true;
 $msgBox.hide()
 
 reloadGames();
+loadAuth();
+conductStates();
+
+function setAuth() {
+  if (!userId) {
+    showError("You are not logged in");
+    return;
+  }
+  localStorage.setItem('auth', userId);
+}
+
+function loadAuth() {
+  let ui = localStorage.getItem('auth');
+  if (ui) {
+    userId = ui;
+  }
+}
+
+function removeAuth() {
+  localStorage.removeItem('auth');
+}
+
+async function logout() {
+  if (!userId) {
+    showError("You are not logged in");
+    return;
+  }
+  const res = await fetch(
+    HTTP_ADDRESS + '/auth/logout',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8'
+      },
+      body: JSON.stringify({userId})
+    }
+  );
+  if (!res.ok) {
+    const err = await res.json();
+    if (res.status < 500) {
+      showError(err.message);
+    } else {
+      showError("Server error");
+      console.log(err.message);
+    }
+    return;
+  }
+  userId = null;
+  state = STATE_REG;
+  conductStates();
+  removeAuth();
+}
 
 function reloadGames() {
-  getAllGames();
+  getAllGames();  
 }
 
 function startGame() {
@@ -193,18 +251,18 @@ async function registerUser() {
   }
   let id = await res.json();
   userId = id;
-  registerFormDiv.hidden = true;
-  welcomeTextDiv.hidden = false;
   userName.textContent = name;  
-  initialScreen.hidden = false;
+
+  state = STATE_HOME;
+  conductStates();
+
+  setAuth();
   await getAllGames();
 }
 
 function goBackToMain() {
-  initialScreen.hidden = false;
-  gameScreen.hidden = true;
-  gameInfo.hidden = true;
-  allGamesScreen.hidden = false;
+  state = STATE_HOME;
+  conductStates();
   socket.emit('exit_game', {gameId, userId});
   gameId = null;
   getAllGames();
@@ -287,7 +345,7 @@ function drawGames(games) {
   for (let game of games) {
     let node = document.createElement('div');
     node.classList = 'p-3 rounded-5 border border-primary mb-2 bg-primary-subtle';
-    let name = game.players.find(p => p.userId === game.gameSettings.ownerId).name;
+    let name = game.players.find(p => p.userId === game.gameSettings.ownerId)?.name;
     node.innerText = `Owner: ${name}. Code: ${game.gameId}. Players now: ${game.players.map(p => p.name).join(',')}`;
     gamesScreen.appendChild(node);
   }
@@ -296,10 +354,10 @@ function drawGames(games) {
 
 function init() {
   gameCodeDisplay.textContent = gameId;
-  initialScreen.hidden = true;
-  gameScreen.hidden = false;
-  gameInfo.hidden = false;
-  allGamesScreen.hidden = true;
+
+  state = STATE_GAME;
+  conductStates();
+  
   ctx = canvas.getContext('2d');
 
   canvas.width = canvas.height = 600;
@@ -374,3 +432,43 @@ function paintPlayer(player, size) {
   ctx.fillRect(Math.ceil(snake.body.at(-1).x) * size, Math.ceil(snake.body.at(-1).y) * size, size, size);
 }
 
+function conductStates() {
+  switch (state) {
+    case STATE_HOME:
+      switchToHome();
+      break;
+    case STATE_GAME:
+      switchToGame();
+      break;
+    case STATE_REG:
+      switchToReg();
+      break;
+  }
+}
+
+function switchToGame() {
+  initialScreen.hidden = true;
+  gameScreen.hidden = false;
+  gameInfo.hidden = false;
+  allGamesScreen.hidden = true;
+  logoutBtn.hidden = true;
+}
+
+function switchToHome() {
+  initialScreen.hidden = false;
+  gameScreen.hidden = true;
+  gameInfo.hidden = true;
+  allGamesScreen.hidden = false;
+  welcomeTextDiv.hidden = false;
+  registerFormDiv.hidden = true;
+  logoutBtn.hidden = false;
+}
+
+function switchToReg() {
+  registerFormDiv.hidden = false;
+  welcomeTextDiv.hidden = true;
+  initialScreen.hidden = true;
+  gameScreen.hidden = true;
+  gameInfo.hidden = true;
+  logoutBtn.hidden = true;
+}

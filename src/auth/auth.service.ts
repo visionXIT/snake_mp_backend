@@ -1,7 +1,9 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { generateId } from "src/game/game.utils";
 import { User } from "src/types/user.types";
+
 let users: User[] = [];
+
 @Injectable()
 export class AuthService {
   createUser(name: string) {
@@ -23,5 +25,9 @@ export class AuthService {
 
   findByName(name: string) {
     return users.find(user => user.name === name);
+  }
+
+  logout(userId: number) {
+    users = users.filter(u => u.id !== userId);
   }
 }
