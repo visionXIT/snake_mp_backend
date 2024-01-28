@@ -103,7 +103,7 @@ export const gameLoop = (game: Game) => {
 
     if (checkCollisionsWithSnakes(
       game.players
-            .filter(p => p.userId !== player.userId)
+            .filter(p => p.userId !== player.userId && p.alive === true)
             .map(p => p.snake), 
       head)) {
         loosers.push(player);
