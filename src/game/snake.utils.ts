@@ -83,16 +83,19 @@ export const gameLoop = (game: Game) => {
           loosers.push(player);
           continue
     }
-    let fs = [...game.foods];
-    for (let food of fs) {
+    let foodToRemove = [];
+    for (let food of game.foods) {
       if (head.x === food.x && head.y === food.y) {
         for (let i = 0; i < food.adds; i++) {
           snake.body.unshift({...snake.body[0]});
         }
         eatApple(player, game, food);
-        removeApple(food, game);
+        foodToRemove.push(food);
         createApple(game);
       }
+    }
+    for (const f of foodToRemove) {
+      removeApple(f, game);
     }
     
     
