@@ -190,9 +190,6 @@ export class GameService {
     if (game.status === 'in_process') {
       throw new BadRequestException('Cannot stop game which is in progress');
     }
-    if (game.players.filter(p => p.userId !== userId).length !== 0) {
-      throw new BadRequestException('Cannot stop game with players in it');
-    }
     if (game.gameSettings.ownerId !== userId) {
       throw new BadRequestException('Not your game');
     }
