@@ -50,7 +50,7 @@ export const createApple = (game: Game) => {
 }
 
 export const removeApple = (food: Food, game: Game) => {
-  game.foods = game.foods.filter(f => f.x !== food.x && f.y !== food.y);
+  game.foods = game.foods.filter(f => f.x !== food.x || f.y !== food.y);
 }
 
 export const gameLoop = (game: Game) => {
@@ -77,25 +77,25 @@ export const gameLoop = (game: Game) => {
     const head = snake.head;
     head.x += snake.velx;
     head.y += snake.vely;
-    
-    if (head.x < 0 || head.x > game.fieldSettings.fieldW ||
-        head.y < 0 || head.y > game.fieldSettings.fieldH) {
+    if (head.x < 0 || head.x >= game.fieldSettings.fieldW ||
+        head.y < 0 || head.y >= game.fieldSettings.fieldH ) {
           loosers.push(player);
-          continue
+          continue; 
     }
-    let foodToRemove = [];
+    let foodToRemove: Food[] = [];
     for (let food of game.foods) {
       if (head.x === food.x && head.y === food.y) {
         for (let i = 0; i < food.adds; i++) {
           snake.body.unshift({...snake.body[0]});
         }
         eatApple(player, game, food);
-        foodToRemove.push(food);
-        createApple(game);
+        foodToRemove.push({...food});
       }
     }
     for (const f of foodToRemove) {
       removeApple(f, game);
+      createApple(game);
+      console.log(f);
     }
     
     

@@ -91,6 +91,7 @@ export class GameService {
     }
     
     game.status = 'in_process';
+    game.foods = [];
     for (let i = 0; i < game.gameSettings.numApples; i++) {
       createApple(game);
     }
