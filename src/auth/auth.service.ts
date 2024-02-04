@@ -14,7 +14,8 @@ export class AuthService {
     }
     users.push({
       name,
-      id
+      id,
+      bestScore: 0
     });
     return id;
   }
@@ -34,5 +35,9 @@ export class AuthService {
 
   logout(userId: number) {
     users = users.filter(u => u.id !== userId);
+  }
+
+  getScores() {
+    return [...users].sort((a, b) => b.bestScore - a.bestScore);
   }
 }

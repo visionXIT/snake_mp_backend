@@ -23,4 +23,9 @@ export class AuthController {
   getUser(@Param('userId') userId: number) {
     return this.service.findById(+userId);
   }
+
+  @Get('/get_scores')
+  getScores() {
+    return this.service.getScores();
+  }
 }

@@ -142,6 +142,7 @@ export class GameService {
         socket.in(game.gameId.toString()).emit('gameOver', { player: game.players.length === 0 ? null : loosers[0], game });
         game.status = 'waiting';
         game.winner = game.players.length === 0 ? null : loosers[0].userId;
+        this.setBestScore(game);
         clearInterval(id);
       }
       else {
@@ -149,17 +150,26 @@ export class GameService {
           if (getPlayersAlive(game).length == 0) {      
             socket.in(game.gameId.toString()).emit('gameOver', { player: game.players.length === 0 ? null : loosers[0], game });
             game.winner = game.players.length === 0 ? null : loosers[0].userId;
+            this.setBestScore(game);
           } else {
             socket
               .in(game.gameId.toString())
               .emit('gameOver', { player: getPlayersAlive(game)[0], game });
             game.winner = getPlayersAlive(game)[0].userId;
+            this.setBestScore(game);
           }
           game.status = 'waiting';
           clearInterval(id);
         }
       }
     }, 10);
+  }
+
+  setBestScore(game: Game) {
+    for (const p of game.players) {
+      const user = this.authService.findById(p.userId);
+      user.bestScore = Math.max(user.bestScore, p.score);
+    }
   }
 
   findGame(gameId: number) {
