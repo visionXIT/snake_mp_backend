@@ -169,7 +169,7 @@ export class GameService {
           clearInterval(id);
         }
       }
-    }, 10);
+    }, 15);
   }
 
   setBestScore(game: Game) {
