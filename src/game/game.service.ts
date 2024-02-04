@@ -187,7 +187,6 @@ export class GameService {
 
   deleteGame(gameId: number, userId: number) {
     const game = this.findGame(gameId);
-    console.log(gameId, userId);
     if (game.status === 'in_process') {
       throw new BadRequestException('Cannot stop game which is in progress');
     }
