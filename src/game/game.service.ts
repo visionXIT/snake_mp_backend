@@ -59,9 +59,9 @@ export class GameService {
       throw new Error('Too many players');
     }
 
-    if (game.status !== 'waiting') {
-      throw new Error('Game is in process or finished');
-    }
+    // if (game.status !== 'waiting') {
+    //   throw new Error('Game is in process or finished');
+    // }
 
     const user = this.authService.findById(userId);
     if (!user) {

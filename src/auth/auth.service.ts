@@ -33,6 +33,7 @@ export class AuthService {
   }
 
   logout(userId: number) {
+    console.log(userId);
     users = users.filter(u => u.id !== userId);
   }
 
