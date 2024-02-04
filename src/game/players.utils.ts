@@ -30,6 +30,7 @@ export const createPlayer = (userId: number, name: string, startSpeed: number) =
     started: false,
     speedPhase: startSpeed,
     phase: 0,
+    moved: true
   };
   return player;
 };

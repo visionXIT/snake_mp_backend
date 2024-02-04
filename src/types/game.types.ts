@@ -39,6 +39,8 @@ export type Player = {
   speedPhase: number;
   phase: number;
   started: boolean;
+  moved: boolean;
+  nextMove?: Move;
 }
 
 export type Snake = {

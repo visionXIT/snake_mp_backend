@@ -40,6 +40,6 @@ export class GameController {
   @Post('/delete_game')
   async deleteGame(@Body() msg: {gameId: number, userId: number}) {
     const {gameId, userId} = msg;
-    this.service.deleteGame(gameId, userId);
+    this.service.deleteGame(+gameId, +userId);
   }
 }

@@ -3,35 +3,57 @@ import { getFreeCoord } from './game.utils';
 
 export const makeMove = (player: Player, move: Move) => {
   let velm = 1;
-
   switch (move as Move) {
     case Move.LEFT:
-      if (player.snake.velx > 0) {
+      if (player.snake.velx != 0) {
+        break;
+      }
+      if (!player.moved) {
+        player.nextMove = Move.LEFT;
         break;
       }
       player.snake.velx = -velm;
       player.snake.vely = 0;
+      player.moved = false;
       break
     case Move.RIGHT:
-      if (player.snake.velx < 0) {
+      if (player.snake.velx != 0) {
+        break;
+      }
+      if (!player.moved) {
+        player.nextMove = Move.RIGHT;
         break;
       }
       player.snake.velx = velm;
       player.snake.vely = 0;
+      player.moved = false;
+
       break
     case Move.UP:
-      if (player.snake.vely > 0) {
+      if (player.snake.vely != 0) {
+        break;
+      }
+      if (!player.moved) {
+        player.nextMove = Move.UP;
         break;
       }
       player.snake.vely = -velm;
       player.snake.velx = 0;
+      player.moved = false;
+
       break
     case Move.DOWN:
-      if (player.snake.vely < 0) {
+      if (player.snake.vely != 0) {
+        break;
+      }
+      if (!player.moved) {
+        player.nextMove = Move.DOWN;
         break;
       }
       player.snake.vely = velm;
       player.snake.velx = 0;
+      player.moved = false;
+
       break
     default:
       throw new Error("Unknown move");
@@ -45,8 +67,22 @@ export const createApple = (game: Game) => {
   }
   game.foods.push({
     x, y, 
-    adds: 1
+    adds: generateRandomFoodsAdd()
   });
+}
+
+export const generateRandomFoodsAdd = () => {
+  const m = Math.random();
+  if (m < 0.05)  {
+    return 5;
+  }
+  if (m < 0.1) {
+    return 3;
+  }
+  if (m < 0.3) {
+    return 2;
+  }
+  return 1;
 }
 
 export const removeApple = (food: Food, game: Game) => {
@@ -71,6 +107,8 @@ export const gameLoop = (game: Game) => {
     if (player.phase < player.speedPhase) {
       continue;
     }
+    
+    
     player.phase = 0;
 
     const snake = player.snake;
@@ -115,6 +153,13 @@ export const gameLoop = (game: Game) => {
     snake.body.shift();
     snake.body.push({x: snake.body.at(-1).x + snake.velx, y: snake.body.at(-1).y + snake.vely});
     snake.head = {...snake.body.at(-1)};
+    if (!player.moved) {
+      player.moved = true;
+      if (player.nextMove) {
+        makeMove(player, player.nextMove);
+      }
+      player.nextMove = null;
+    }
   }
   for (let player of loosers) {
     player.alive = false
