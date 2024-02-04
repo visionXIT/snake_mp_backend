@@ -52,6 +52,10 @@ export class GameService {
     const existingPlayer = getPlayerById(game, userId);
 
     if (existingPlayer) {
+      if (!existingPlayer.alive) {
+        initPlayer(existingPlayer, game);
+        updatePlayer(existingPlayer, game.gameSettings.startSpeedPhaze);
+      }
       return { game, existingPlayer };
     }
 
@@ -69,6 +73,8 @@ export class GameService {
     }
 
     const player = createPlayer(userId, user.name, game.gameSettings.startSpeedPhaze);
+    initPlayer(player, game);
+    updatePlayer(player, game.gameSettings.startSpeedPhaze);
     game.players.push(player);
     return { game, player };
   }
