@@ -21,7 +21,6 @@ export class AuthService {
   }
 
   findById(id: number) {
-    console.log(id);
     const user = users.find(user => user.id === id);
     if (!user) {
       throw new NotFoundException("User is not found");

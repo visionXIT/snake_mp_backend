@@ -24,13 +24,11 @@ export class GameSocketController {
       this.service.leaveGame(+room, client.data.userId);
     }
     client.disconnect(true);
-    console.log("Client disconnected");
   }
 
   handleConnection(
     @ConnectedSocket() client: Socket,
   ) {
-    console.log("Client connected to game");
   }
   
   @SubscribeMessage('join_game')

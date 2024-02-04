@@ -33,7 +33,6 @@ export const getRandomCoords = (game: Game, min = 3, max = 3) => {
 
 export const areCoordsFree = (arr: Cell[], game: Game) => {
   const cells = getUsedCoords(game);
-  // console.log(cells, arr);
   for (let c of arr) {
     const f = cells.find(cell => cell.x === c.x && cell.y === c.y);
     if (f) {

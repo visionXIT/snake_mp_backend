@@ -95,7 +95,6 @@ export const gameLoop = (game: Game) => {
     for (const f of foodToRemove) {
       removeApple(f, game);
       createApple(game);
-      console.log(f);
     }
     
     

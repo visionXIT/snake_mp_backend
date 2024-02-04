@@ -23,7 +23,6 @@ export class GameController {
 
   @Get('/check_gameId/:gameId')
   async joinGame(@Param("gameId", new ParseIntPipe()) gameId: number) {
-    console.log(gameId);
     const game = this.service.findGame(gameId);
     return game ? true : false;
   }
