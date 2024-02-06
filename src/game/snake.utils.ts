@@ -141,6 +141,11 @@ export const gameLoop = (game: Game) => {
       continue;
     }
 
+    if (checkCollisionsWithObstacles(snake.head, game.obstacles)) {
+      loosers.push(player);
+      continue;
+    }
+
     if (checkCollisionsWithSnakes(
       game.players
             .filter(p => p.userId !== player.userId && p.alive === true)
@@ -186,6 +191,16 @@ const checkCollisionsWithSnakes = (players: Snake[], head: Cell) => {
   }
   return false;
 }
+
+const checkCollisionsWithObstacles = (head: Cell, obstacles: Cell[]) => {
+  for (let ob of obstacles) {
+    if (head.x === ob.x && head.y === ob.y) {
+      return true;
+    }
+  }
+  return false;
+}
+
 
 const eatApple = (player: Player, game: Game, food: Food) => {
   let dif = player.score % game.gameSettings.increasingVelPerScores;

@@ -7,7 +7,7 @@ import {
   GameSettingsType,
   Move,
 } from 'src/types/game.types';
-import { generateId } from './game.utils';
+import { createObstacles, generateId } from './game.utils';
 import {
   createPlayer,
   getNumPlayers,
@@ -34,6 +34,7 @@ export class GameService {
       gameSettings,
       fieldSettings,
       players: [],
+      obstacles: [],
       winner: null,
       gameId,
       status: 'waiting',
@@ -101,6 +102,7 @@ export class GameService {
     for (let i = 0; i < game.gameSettings.numApples; i++) {
       createApple(game);
     }
+    createObstacles(game);
 
     for (let player of game.players) {
       initPlayer(player, game);

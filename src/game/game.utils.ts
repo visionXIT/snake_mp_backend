@@ -51,3 +51,35 @@ export const getFreeCoord = (game: Game) => {
   // console.log("Final", coords);
   return coords;
 }
+
+export const createObstacles = (game: Game) => {
+  game.obstacles = [];
+  for (let i = 0; i < game.gameSettings.numObstacles; i++) {
+    let coords: Cell[] = [];
+    let id = getRandomNumber(0, obstaclesPatterns.length);
+    do {
+      const cell = getFreeCoord(game);
+      coords = [cell];
+      for (let c of obstaclesPatterns[id]) {
+        coords.push(addCell(cell, c));
+      }
+      id = (id + 1) % obstaclesPatterns.length;
+    } while (!areCoordsFree(coords, game));
+    game.obstacles.push(...coords);
+  }
+}
+
+const obstaclesPatterns = [
+  [{x: 0, y: -1}, {x: 0, y: -2}, {x: -1, y: -2}],
+  [{x: 0, y: 1}, {x: 0, y: 2}, {x: -1, y: 2}],
+  [{x: 0, y: -1}, {x: 0, y: -2}, {x: 1, y: -2}],
+  [{x: 0, y: 1}, {x: 0, y: 2}, {x: 1, y: 2}],
+  [{x: 0, y: -1}, {x: 0, y: -2}, {x: 0, y: 1}, {x: 0, y: 2}],
+  [{x: -2, y: 0}, {x: -1, y: 0}, {x: 1, y: 0}, {x: 2, y: 0}],
+  [],
+  [{x: 0, y: -1}, {x: -1, y: -1}, {x: 0, y: 1}, {x: -1, y: 1}, {x: 1, y: 1}, {x: 1, y: -1}, {x: 1, y: 0}, {x: -1, y: 0}],
+]
+
+const addCell = (a: Cell, b: Cell) => {
+  return {x: a.x + b.x, y: a.y + b.y};
+}

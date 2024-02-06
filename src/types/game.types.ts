@@ -13,6 +13,7 @@ export type GameSettingsType = {
   increasingVelPerScores: number;
   startSpeedPhaze: number;
   numApples: number;
+  numObstacles: number;
 }
 
 export type Game = {
@@ -23,6 +24,7 @@ export type Game = {
   winner: number;
   status: GameStatus;
   foods: Food[];
+  obstacles: Cell[];
   timeGameStarted?: number;
 }
 
