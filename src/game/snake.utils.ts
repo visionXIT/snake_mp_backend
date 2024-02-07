@@ -122,7 +122,7 @@ export const gameLoop = (game: Game) => {
     }
     let foodToRemove: Food[] = [];
     for (let food of game.foods) {
-      if (head.x === food.x && head.y === food.y) {
+      if (checkCollision(food, head)) {
         for (let i = 0; i < food.adds; i++) {
           snake.body.unshift({...snake.body[0]});
         }
@@ -155,6 +155,16 @@ export const gameLoop = (game: Game) => {
         continue;
     }
 
+    // console.log(snake.body)
+    // let oldSnake = JSON.parse(JSON.stringify(snake.body));
+    // snake.body[snake.body.length - 1] = {...head};
+    // for (let i = snake.body.length - 2; i >= 0; i--) {
+    //   snake.body[i].x = oldSnake[i + 1].x; 
+    //   snake.body[i].y = oldSnake[i + 1].y;
+    // }
+    // console.log(snake.body, "\n===\n");
+
+
     snake.body.shift();
     snake.body.push({x: snake.body.at(-1).x + snake.velx, y: snake.body.at(-1).y + snake.vely});
     snake.head = {...snake.body.at(-1)};
@@ -174,7 +184,7 @@ export const gameLoop = (game: Game) => {
 
 const checkSelfCollisions = (player: Snake) => {
   for (let c of player.body.slice(0, -2)) {
-    if (c.x === player.head.x && c.y ===player.head.y) {
+    if (checkCollision(player.head, c)) {
       return true;
     }
   }
@@ -184,7 +194,7 @@ const checkSelfCollisions = (player: Snake) => {
 const checkCollisionsWithSnakes = (players: Snake[], head: Cell) => {
   for (let p of players) {
     for (let c of p.body) {
-      if (c.x === head.x && c.y === head.y) {
+      if (checkCollision(head, c)) {
         return true;
       }
     }
@@ -194,7 +204,7 @@ const checkCollisionsWithSnakes = (players: Snake[], head: Cell) => {
 
 const checkCollisionsWithObstacles = (head: Cell, obstacles: Cell[]) => {
   for (let ob of obstacles) {
-    if (head.x === ob.x && head.y === ob.y) {
+    if (checkCollision(head, ob)) {
       return true;
     }
   }
@@ -212,4 +222,12 @@ const eatApple = (player: Player, game: Game, food: Food) => {
   if ((dif + food.adds >= game.gameSettings.increasingVelPerScores) || player.score % game.gameSettings.increasingVelPerScores === 0) {
     player.speedPhase--;
   }
+}
+
+export const checkCollision = (a: Cell, b: Cell) => {
+  return (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y) <= 0.5;
+}
+
+export const cellsEquals = (a: Cell, b:Cell) => {
+  return a.x === b.x && a.y === b.y;
 }
