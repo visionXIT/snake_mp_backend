@@ -74,11 +74,15 @@ export const createApple = (game: Game) => {
 export const generateRandomFoodsAdd = () => {
   const m = Math.random();
   if (m < 0.05)  {
-    return 5;
+    return -2;
   }
   if (m < 0.1) {
     return 3;
   }
+  if (m < 0.15) {
+    return 5;
+  }
+
   if (m < 0.3) {
     return 2;
   }
